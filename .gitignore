@@ -64,7 +64,8 @@ target/
 
 
 #### Custom Settings ####
-.gitignore
+#.gitignore
+.DS_Store
 
 # ignore python output file
 python/output/
