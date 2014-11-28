@@ -1,3 +1,5 @@
+#### Build in Python ignore START ####
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -52,3 +54,20 @@ docs/_build/
 
 # PyBuilder
 target/
+
+#### Build in Python ignore STOP ####
+
+
+#### Build in Android ignore START ####
+
+#### Build in ANdroid ignore STOP ####
+
+
+#### Custom Settings ####
+.gitignore
+
+# ignore python output file
+python/output/
+
+
+
