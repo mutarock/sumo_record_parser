@@ -8,7 +8,7 @@ from urlparse import urljoin #for combine the link
 import urllib, urllib2, httplib, socket
 from urllib2 import urlopen,Request
 import urlparse
-import time  
+import datetime, time  
 
 from collections import OrderedDict
 
@@ -42,16 +42,29 @@ headers = {
     'Pragma': 'no-cache',
 }
 
-done_dict = []
+win_lose_type = {
+    u'\u767d\u4e38' : 0,         # 白丸
+    u'\u9ED2\u4E38' : 1,         # 黑丸
+    u'\u4E0D\u6226\u52DD' : 2,   # 不戰勝
+    u'\u4E0D\u6226\u6557' : 3,   # 不戰敗
+    u'\u4F11\u307F' : 4,         # 休み
+    u'\u5F15\u5206' : 5,         # 引分
+    u'\u75DB\u5206' : 6          # 痛分
 
+}
+
+
+
+done_dict = []
 
 def add_into_done_list(key_string):
 
     global done_dict
     done_dict.append(key_string)
 
-    with open('output/done_lists.txt', 'w+') as f:
+    with open('output/done_lists.txt', 'a+') as f:
         f.write(key_string + '\n')
+
 
 def save_total_record_json(data):
     ## save info into json
@@ -60,16 +73,24 @@ def save_total_record_json(data):
         f.write(doc_str)
 
 
+def save_single_date_record_json(data):
+    return
+
+
 def parseHTML(data):
+
+    #totalRecord = {}
+    totalRecord = OrderedDict()
+
     tree = etree.HTML(data)
+
+    # get date
+    date = tree.xpath('//*/div[@id="content"]/div[@id="mainContent"]/p[@class="mdDate"]')
+    totalRecord['date'] = date[0].text.strip()
 
     # get east total record
     east_elements = tree.xpath('//*/div[@id="east"]/table[@class="main "]/tr')
     # print len(east_elements)
-
-
-    #totalPlayer = {}
-    totalPlayer = OrderedDict()
 
     # get EAST player name, rank, and total record with competitor
     for index in xrange(0, len(east_elements), 2):
@@ -90,27 +111,24 @@ def parseHTML(data):
 
         #print singlePlayer
 
-        # wbRecord = [i.get('alt') for i in recordInfo]
-        # 白丸unicode = u'\u767d\u4e38'
-        wbRecord = ['O' if i.get('alt') == u'\u767d\u4e38' else 'X' for i in recordInfo]
+        wbRecord = [win_lose_type.get(i.get('alt')) for i in recordInfo]
         singlePlayer['win_lose_list'] = wbRecord
         #print wbRecord
 
 
         # get competitor info and order
-        comRecord = [i.text for i in competitorInfo]
+        comRecord = [i.text if i.text else "" for i in competitorInfo]
         singlePlayer['competitor_list'] = comRecord
         #print comRecord
 
 
-        totalPlayer["E" + str(index/2 + 1)] = singlePlayer
+        totalRecord["E" + str(index/2 + 1)] = singlePlayer
 
 
 
     # get west total record
     west_elements = tree.xpath('//*/div[@id="west"]/table[@class="main "]/tr')
     # print len(west_elements)
-
 
     # get WEST player name, rank, and total record with competitor
     for index in xrange(0, len(west_elements), 2):
@@ -131,29 +149,33 @@ def parseHTML(data):
 
         #print singlePlayer
 
-        # 白丸unicode = u'\u767d\u4e38'
-        wbRecord = ['O' if i.get('alt') == u'\u767d\u4e38' else 'X' for i in recordInfo]
+        wbRecord = [win_lose_type.get(i.get('alt')) for i in recordInfo]
         singlePlayer['win_lose_list'] = wbRecord
         #print wbRecord
 
 
         # get competitor info and order
-        comRecord = [i.text for i in competitorInfo]
+        comRecord = [i.text if i.text else "" for i in competitorInfo]
         singlePlayer['competitor_list'] = comRecord
         #print comRecord
 
 
-        totalPlayer["W" + str(index/2 + 1)] = singlePlayer
+        totalRecord["W" + str(index/2 + 1)] = singlePlayer
 
 
-    # for keys, values in totalPlayer.items():
+    # for keys, values in totalRecord.items():
     #     print keys, values
     #     print "=" * 20
 
-    # print len(totalPlayer)
+    # print len(totalRecord)
 
-    # print json.dumps(totalPlayer)
-    return totalPlayer
+    # print json.dumps(totalRecord)
+    return totalRecord
+
+
+def parseSingleDateHTML(data):
+    return
+
 
 def saveToFile(data):
 
@@ -188,26 +210,37 @@ if __name__=="__main__":
 
     ## set init
     queues = {
-        'total' : 'http://www.sumo.or.jp/honbasho/main/hoshitori'
+        'total' : 'http://www.sumo.or.jp/honbasho/main/hoshitori',
+        'singleDay' : 'http://www.sumo.or.jp/honbasho/main/torikumi?day=%d&rank=1'
     }
 
 
     while len(queues) > 0:
         time.sleep(5)
 
-
         key, value = queues.popitem()
         print key, value
 
+        currentDate = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        add_into_done_list(currentDate)
 
-        add_into_done_list(key)
-        data = getData(value)
+        if key == 'total':
+            add_into_done_list(key + " : " + value)
+            data = getData(value)
 
-        resultData = parseHTML(data)
-        save_total_record_json(resultData)
+            resultData = parseHTML(data)
+            save_total_record_json(resultData)
+        else:
+            for x in xrange(1, 16):
+                print value % x
+                add_into_done_list(key + " : " + (value % x))
+
+
 
 
         print 'Here has queues =>', len(queues)
         print '-' * 20
+
+    add_into_done_list('-' * 20)
 
 print '===== Done ====='
