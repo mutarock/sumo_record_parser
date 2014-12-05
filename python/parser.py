@@ -68,7 +68,9 @@ def add_into_done_list(key_string):
 
 def save_total_record_json(data):
     ## save info into json
-    with open('output/docs.json', 'w+') as f:
+    dateStr = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+    with open('output/' + dateStr + '.json', 'w+') as f:
         doc_str = json.dumps(data)
         f.write(doc_str)
 
@@ -232,6 +234,7 @@ if __name__=="__main__":
             save_total_record_json(resultData)
         else:
             for x in xrange(1, 16):
+                time.sleep(5)
                 print value % x
                 add_into_done_list(key + " : " + (value % x))
 
