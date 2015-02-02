@@ -20,9 +20,9 @@ retr_one = lambda nodes: nodes.text if len(nodes)==0 else nodes[0].text
 retr_list = lambda nodes : filter(None, [i.strip() for i in nodes.itertext()])
 
 
-year_url = 'http://www.sumo.or.jp/ticket/year_schedule'
-sumo_url = 'http://www.sumo.or.jp/'
-base_url = 'http://www.sumo.or.jp/honbasho/main/hoshitori#east'
+base_url = 'http://www.sumo.or.jp/'
+year_schedule_url = 'http://www.sumo.or.jp/ticket/year_schedule'
+sumo_hoshitori_url = 'http://www.sumo.or.jp/honbasho/main/hoshitori#east'
 # headers = {
 #     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
 #     'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.124 Safari/537.36',
@@ -57,16 +57,8 @@ win_lose_type = {
 }
 
 
-
-done_dict = []
-
 def add_into_done_list(key_string):
-
-    global done_dict
-    done_dict.append(key_string)
-
     check_output_folder_exist('output/')
-
     with open('output/done_lists.txt', 'a+') as f:
         f.write(key_string + '\n')
 
@@ -150,7 +142,6 @@ def check_output_folder_exist(folder_name):
 
 
 def save_to_file(data):
-
     check_output_folder_exist('output/')
     ## save info into json
     dateStr = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -161,7 +152,17 @@ def save_to_file(data):
 
 
 def update_data_to_server(data):
-    return
+    connection = httplib.HTTPSConnection('api.parse.com', 443)
+    connection.connect()
+    connection.request('POST', '/1/classes/TotalRecord', json.dumps(data), 
+        {
+            "X-Parse-Application-Id": "APP-ID",
+            "X-Parse-REST-API-Key": "REST-API-Key",
+            "Content-Type": "application/json"
+        })
+
+    result = json.loads(connection.getresponse().read())
+    print result
 
 
 
@@ -185,8 +186,8 @@ if __name__=="__main__":
         key, value = queues.popitem()
         print key, value
 
-        currentDate = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        add_into_done_list(currentDate)
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        add_into_done_list(current_date)
 
         if key == 'total':
             add_into_done_list(key + " : " + value)
@@ -199,7 +200,7 @@ if __name__=="__main__":
 
             save_to_file(result_data)
             
-            update_data_to_server(result_data)
+            #update_data_to_server(result_data)
 
         else:
             for x in xrange(1, 16):
