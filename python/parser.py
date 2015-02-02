@@ -20,7 +20,7 @@ retr_one = lambda nodes: nodes.text if len(nodes)==0 else nodes[0].text
 retr_list = lambda nodes : filter(None, [i.strip() for i in nodes.itertext()])
 
 
-amazon_url = 'http://www.sumo.or.jp/'
+sumo_url = 'http://www.sumo.or.jp/'
 base_url = 'http://www.sumo.or.jp/honbasho/main/hoshitori#east'
 # headers = {
 #     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -29,7 +29,7 @@ base_url = 'http://www.sumo.or.jp/honbasho/main/hoshitori#east'
 #     'Accept-Language': 'ja,zh-TW;q=0.8,zh;q=0.6,en;q=0.4,en-US;q=0.2',
 #     'Cache-Control': 'no-cache',
 #     'Connection': 'keep-alive',
-#     'Host': 'www.amazon.co.jp',
+#     'Host': 'www.sumo.or.jp',
 #     'Pragma': 'no-cache',
 # }
 
@@ -175,11 +175,11 @@ def parseHTML(data):
     return totalRecord
 
 
-def parseSingleDateHTML(data):
+def parse_single_date_html(data):
     return
 
 
-def saveToFile(data):
+def save_to_file(data):
 
     global done_dict
     filename = done_dict[-1]+'.html'
@@ -201,6 +201,24 @@ def getData(url):
     req = urllib2.Request(url, None, headers)
     page = urllib2.urlopen(req) 
     return page.read()
+
+
+def generate_url_request(url):
+    request = urllib2.Request(url, None, headers)
+    return request
+
+def send_url_request(request):
+    page = urllib2.urlopen(request) 
+    return page.read()
+
+def parse_html_data_to_json(html_data):
+    return
+
+def parse_json_format_data():
+    return
+
+def update_data_to_server(data):
+    return
 
 
 
@@ -228,10 +246,12 @@ if __name__=="__main__":
 
         if key == 'total':
             add_into_done_list(key + " : " + value)
-            data = getData(value)
 
-            resultData = parseHTML(data)
-            save_total_record_json(resultData)
+            request = generate_url_request(value)
+            data = send_url_request(request)
+
+            result_data = parseHTML(data)
+            save_total_record_json(result_data)
         else:
             for x in xrange(1, 16):
                 time.sleep(5)
