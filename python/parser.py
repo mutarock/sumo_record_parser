@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
 import re, os, sys
-
-from lxml import etree
-
-import robotparser #for check a wbe page can be fetched or not
-from urlparse import urljoin #for combine the link
-import urllib, urllib2, httplib, socket
-from urllib2 import urlopen, Request
-import urlparse
+import urllib, urllib2, httplib
 import datetime, time  
 
 from collections import OrderedDict
-
-#from bson import json_util
+from lxml import etree
 import json
+
 
 retr_text = lambda nodes, pipe='': pipe.join([''.join(i.itertext()) for i in nodes])
 retr_one = lambda nodes: nodes.text if len(nodes)==0 else nodes[0].text
@@ -34,6 +27,7 @@ sumo_hoshitori_url = 'http://www.sumo.or.jp/honbasho/main/hoshitori#east'
 #     'Pragma': 'no-cache',
 # }
 
+
 headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.124 Safari/537.36',
@@ -44,6 +38,7 @@ headers = {
     'Host': 'www.sumo.or.jp',
     'Pragma': 'no-cache',
 }
+
 
 win_lose_type = {
     u'\u767d\u4e38' : 0,         # 白丸
@@ -59,11 +54,10 @@ win_lose_type = {
 
 def add_into_done_list(key_string):
     check_output_folder_exist('output/')
+
     with open('output/done_lists.txt', 'a+') as f:
         f.write(key_string + '\n')
 
-
-##############################################################################################
 
 def get_url_response_with_encoding(url):
     req = urllib2.Request(url, None, headers)
@@ -103,10 +97,10 @@ def parse_html_data_to_json(html_data):
 
 def get_total_record_by_path(total_record, tree, path, tag):
 
-    # get east total record
+    # get total record by path
     elements = tree.xpath(path)
 
-    # get EAST player name, rank, and total record with competitor
+    # get player name, rank, and total record with competitor
     for index in xrange(0, len(elements), 2):
 
         single_player = {}
@@ -143,15 +137,14 @@ def check_output_folder_exist(folder_name):
 
 def save_to_file(data):
     check_output_folder_exist('output/')
-    ## save info into json
-    dateStr = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
+    dateStr = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     with open('output/' + dateStr + '.json', 'w+') as f:
         doc_str = json.dumps(data)
         f.write(doc_str)
 
 
-def update_data_to_server(data):
+def update_data_to_server(data, object_name):
     connection = httplib.HTTPSConnection('api.parse.com', 443)
     connection.connect()
     connection.request('POST', '/1/classes/TotalRecord', json.dumps(data), 
@@ -165,17 +158,17 @@ def update_data_to_server(data):
     print result
 
 
+def check_data_exist_on_server():
+    return False
+
 
 ######## Main Start ########
 
 if __name__=="__main__":
-    #reload(sys)
-    #sys.setdefaultencoding('utf-8')
 
-    ## set init
     queues = {
         'total' : 'http://www.sumo.or.jp/honbasho/main/hoshitori',
-        'singleDay' : 'http://www.sumo.or.jp/honbasho/main/torikumi?day=%d&rank=1'
+        'single' : 'http://www.sumo.or.jp/honbasho/main/torikumi?day=%d&rank=1'
     }
 
     print '===== START ====='
